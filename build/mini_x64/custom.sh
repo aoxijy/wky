@@ -9,7 +9,7 @@
 cat feeds.conf.default
 
 # 添加第三方软件包
-git clone https://github.com/db-one/dbone-packages.git -b 18.06 package/dbone-packages
+git clone https://github.com/kenzok8/small-package package/small-package
 
 # 更新并安装源
 ./scripts/feeds clean
@@ -28,10 +28,10 @@ ZZZ="package/lean/default-settings/files/zzz-default-settings"
 KERNEL_PATCHVER=$(cat target/linux/x86/Makefile|grep KERNEL_PATCHVER | sed 's/^.\{17\}//g')
 KERNEL_TESTING_PATCHVER=$(cat target/linux/x86/Makefile|grep KERNEL_TESTING_PATCHVER | sed 's/^.\{25\}//g')
 #
-sed -i 's#192.168.1.1#10.0.0.1#g' $NET                                                    # 定制默认IP
-# sed -i 's#OpenWrt#OpenWrt-X86#g' $NET                                                     # 修改默认名称为OpenWrt-X86
+sed -i 's#192.168.1.1#192.168.9.222#g' $NET                                                    # 定制默认IP
+sed -i 's#OpenWrt#GanQuanRu#g' $NET                                                     # 修改默认名称为OpenWrt-X86
 sed -i 's@.*CYXluq4wUazHjmCDBCqXF*@#&@g' $ZZZ                                             # 取消系统默认密码
-sed -i "s/OpenWrt /ONE build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" $ZZZ              # 增加自己个性名称
+sed -i "s/OpenWrt /GanQuanRu build $(TZ=UTC-8 date "+%Y.%m.%d") @ OpenWrt /g" $ZZZ              # 增加自己个性名称
 # sed -i "s/$KERNEL_PATCHVER/$KERNEL_TESTING_PATCHVER/g" target/linux/x86/Makefile        # 修改内核版本为最新
 # sed -i "/uci commit luci/i\uci set luci.main.mediaurlbase=/luci-static/neobird" $ZZZ        # 设置默认主题(如果编译可会自动修改默认主题的，有可能会失效)
 # sed -i 's#localtime  = os.date()#localtime  = os.date("%Y年%m月%d日") .. " " .. translate(os.date("%A")) .. " " .. os.date("%X")#g' package/lean/autocore/files/*/index.htm               # 修改默认时间格式
@@ -49,7 +49,7 @@ sed -i '/exit 0/i\ethtool -s eth0 speed 2500 duplex full' package/base-files/fil
 
 cat >> $ZZZ <<-EOF
 # 设置旁路由模式
-uci set network.lan.gateway='10.0.0.254'                     # 旁路由设置 IPv4 网关
+uci set network.lan.gateway='192.168.9.1'                     # 旁路由设置 IPv4 网关
 uci set network.lan.dns='223.5.5.5 119.29.29.29'            # 旁路由设置 DNS(多个DNS要用空格分开)
 uci set dhcp.lan.ignore='1'                                  # 旁路由关闭DHCP功能
 uci delete network.lan.type                                  # 旁路由桥接模式-禁用
@@ -214,8 +214,8 @@ EOF
 
 # 编译PVE/KVM、Hyper-V、VMware镜像以及镜像填充
 cat >> .config <<EOF
-CONFIG_QCOW2_IMAGES=y
-CONFIG_VHDX_IMAGES=y
+CONFIG_QCOW2_IMAGES=n
+CONFIG_VHDX_IMAGES=n
 CONFIG_VMDK_IMAGES=y
 CONFIG_TARGET_IMAGES_PAD=y
 EOF
@@ -248,20 +248,22 @@ EOF
 
 # 第三方插件选择:
 cat >> .config <<EOF
-# CONFIG_PACKAGE_luci-app-oaf=y #应用过滤
+# CONFIG_PACKAGE_luci-app-oaf=n #应用过滤
 CONFIG_PACKAGE_luci-app-openclash=y #OpenClash客户端
-# CONFIG_PACKAGE_luci-app-serverchan=y #微信推送
-# CONFIG_PACKAGE_luci-app-eqos=y #IP限速
-# CONFIG_PACKAGE_luci-app-control-weburl=y #网址过滤
-# CONFIG_PACKAGE_luci-app-smartdns=y #smartdns服务器
-# CONFIG_PACKAGE_luci-app-adguardhome=y #ADguardhome
+# CONFIG_PACKAGE_luci-app-serverchan=n #微信推送
+# CONFIG_PACKAGE_luci-app-eqos=n #IP限速
+# CONFIG_PACKAGE_luci-app-control-weburl=n #网址过滤
+# CONFIG_PACKAGE_luci-app-smartdns=n #smartdns服务器
+# CONFIG_PACKAGE_luci-app-adguardhome=n #ADguardhome
+CONFIG_PACKAGE_luci-app-ddns-go=y
+CONFIG_PACKAGE_luci-app-npc=y
 CONFIG_PACKAGE_luci-app-poweroff=y #关机（增加关机功能）
 # CONFIG_PACKAGE_luci-app-argon-config=y #argon主题设置
 CONFIG_PACKAGE_luci-theme-atmaterial_new=y #atmaterial 三合一主题
-CONFIG_PACKAGE_luci-theme-neobird=y #Neobird 主题
+CONFIG_PACKAGE_luci-theme-design=y #design 主题
 CONFIG_PACKAGE_luci-app-autotimeset=y #定时重启系统，网络
-# CONFIG_PACKAGE_luci-app-ddnsto=y #小宝开发的DDNS.to内网穿透
-# CONFIG_PACKAGE_ddnsto=y #DDNS.to内网穿透软件包
+# CONFIG_PACKAGE_luci-app-ddnsto=n #小宝开发的DDNS.to内网穿透
+# CONFIG_PACKAGE_ddnsto=n #DDNS.to内网穿透软件包
 EOF
 
 # ShadowsocksR插件:
@@ -291,15 +293,15 @@ cat >> .config <<EOF
 CONFIG_PACKAGE_luci-app-adbyby-plus=n #adbyby去广告
 CONFIG_PACKAGE_luci-app-webadmin=n #Web管理页面设置
 CONFIG_PACKAGE_luci-app-ddns=n #DDNS服务
-CONFIG_DEFAULT_luci-app-vlmcsd=y #KMS激活服务器
+CONFIG_DEFAULT_luci-app-vlmcsd=n #KMS激活服务器
 CONFIG_PACKAGE_luci-app-filetransfer=y #系统-文件传输
 CONFIG_PACKAGE_luci-app-autoreboot=n #定时重启
-CONFIG_PACKAGE_luci-app-upnp=y #通用即插即用UPnP(端口自动转发)
+CONFIG_PACKAGE_luci-app-upnp=n #通用即插即用UPnP(端口自动转发)
 CONFIG_PACKAGE_luci-app-arpbind=n #IP/MAC绑定
-CONFIG_PACKAGE_luci-app-accesscontrol=y #上网时间控制
+CONFIG_PACKAGE_luci-app-accesscontrol=n #上网时间控制
 CONFIG_PACKAGE_luci-app-wol=y #网络唤醒
 CONFIG_PACKAGE_luci-app-nps=n #nps内网穿透
-CONFIG_PACKAGE_luci-app-frpc=y #Frp内网穿透
+CONFIG_PACKAGE_luci-app-frpc=n #Frp内网穿透
 CONFIG_PACKAGE_luci-app-nlbwmon=y #宽带流量监控
 CONFIG_PACKAGE_luci-app-wrtbwmon=y #实时流量监测
 CONFIG_PACKAGE_luci-app-haproxy-tcp=n #Haproxy负载均衡
@@ -323,7 +325,7 @@ CONFIG_PACKAGE_luci-app-wireguard=n #wireguard端
 #
 # VPN相关插件(禁用):
 #
-CONFIG_PACKAGE_luci-app-v2ray-server=y #V2ray服务器
+CONFIG_PACKAGE_luci-app-v2ray-server=n #V2ray服务器
 CONFIG_PACKAGE_luci-app-pptp-server=n #PPTP VPN 服务器
 CONFIG_PACKAGE_luci-app-ipsec-vpnd=n #ipsec VPN服务
 CONFIG_PACKAGE_luci-app-openvpn-server=n #openvpn服务
